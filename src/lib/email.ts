@@ -2,11 +2,13 @@ import { Resend } from "resend";
 
 import { getServerEnv } from "@/lib/env";
 
-const resend = new Resend(getServerEnv().resendApiKey);
-
-// Required (no sandbox default): see audit C2. Sending from the Resend
-// test sender `onboarding@resend.dev` silently fails in production.
-const FROM = getServerEnv().resendFrom;
+// Resend is OPTIONAL. Read directly from process.env (not getServerEnv) so
+// this module loads even when the keys are empty, and construct the client
+// lazily — a null client means "email not configured" and notify*() skips
+// sending instead of crashing at boot.
+const resendApiKey = process.env.RESEND_API_KEY ?? "";
+const FROM = process.env.RESEND_FROM ?? "";
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -30,6 +32,11 @@ export async function notifyConsultation(input: {
   target: string;
   preferredTime: string;
 }): Promise<void> {
+  if (!resend || !FROM) {
+    console.warn("[email] Resend not configured — skipping consultation notification.");
+    return;
+  }
+
   const { adminEmail, siteUrl } = getServerEnv();
   const when = input.preferredTime || "Not specified";
 
@@ -70,6 +77,11 @@ export async function notifyWorkshop(input: {
   email: string;
   workshop: string;
 }): Promise<void> {
+  if (!resend || !FROM) {
+    console.warn("[email] Resend not configured — skipping workshop notification.");
+    return;
+  }
+
   const { adminEmail } = getServerEnv();
   try {
     await resend.emails.send({

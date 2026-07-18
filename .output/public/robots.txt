@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-
-# Replace the domain below with your production domain (SITE_URL).
-Sitemap: https://thecloudschool.in/sitemap.xml

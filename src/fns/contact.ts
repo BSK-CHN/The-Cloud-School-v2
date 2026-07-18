@@ -51,15 +51,19 @@ export const submitContact = createServerFn({ method: "POST" })
     }
 
     try {
-      const { Resend } = await import("resend");
-      const resend = new Resend(getServerEnv().resendApiKey);
-      await resend.emails.send({
-        from: getServerEnv().resendFrom,
-        to: getServerEnv().adminEmail,
-        replyTo: input.email,
-        subject: `Contact message: ${input.subject || input.name}`,
-        html: `<h2>New contact message</h2><p><b>From:</b> ${input.name} (${input.email}, ${input.phone})</p><p>${input.message.replace(/</g, "&lt;")}</p>`,
-      });
+      if (!process.env.RESEND_API_KEY) {
+        console.warn("[contact] Resend not configured — skipping admin email.");
+      } else {
+        const { Resend } = await import("resend");
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        await resend.emails.send({
+          from: process.env.RESEND_FROM ?? "",
+          to: getServerEnv().adminEmail,
+          replyTo: input.email,
+          subject: `Contact message: ${input.subject || input.name}`,
+          html: `<h2>New contact message</h2><p><b>From:</b> ${input.name} (${input.email}, ${input.phone})</p><p>${input.message.replace(/</g, "&lt;")}</p>`,
+        });
+      }
     } catch (e) {
       console.error("Contact admin email failed:", e);
     }

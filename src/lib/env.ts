@@ -27,8 +27,10 @@ export function getServerEnv() {
       process.env.SUPABASE_SERVICE_ROLE_KEY,
       "SUPABASE_SERVICE_ROLE_KEY",
     ),
-    resendApiKey: required(process.env.RESEND_API_KEY, "RESEND_API_KEY"),
-    resendFrom: required(process.env.RESEND_FROM, "RESEND_FROM"),
+    // Resend is OPTIONAL: the site boots and saves leads without it; notify*()
+    // in src/lib/email.ts skips sending when these are empty (see audit C2 fix).
+    resendApiKey: process.env.RESEND_API_KEY ?? "",
+    resendFrom: process.env.RESEND_FROM ?? "",
     adminEmail: required(process.env.ADMIN_EMAIL, "ADMIN_EMAIL"),
     siteUrl: required(process.env.SITE_URL, "SITE_URL").replace(/\/$/, ""),
     whatsappNumber: process.env.WHATSAPP_NUMBER ?? "919840991965",
@@ -46,8 +48,6 @@ export function assertServerEnv(): void {
     "SUPABASE_URL",
     "SUPABASE_ANON_KEY",
     "SUPABASE_SERVICE_ROLE_KEY",
-    "RESEND_API_KEY",
-    "RESEND_FROM",
     "ADMIN_EMAIL",
     "SITE_URL",
   ];
