@@ -4,7 +4,8 @@
  * - Server secrets are read from `process.env` and validated once at startup.
  *   These MUST never be prefixed with `VITE_` (that would expose them to the client).
  * - Public/client values are read from `import.meta.env` and MUST be prefixed
- *   with `VITE_` so Vite inlines them into the browser bundle.
+ *   with `VITE_` so Vite (via the `vercel.functions.env` contract) inlines them
+ *   into the browser bundle.
  */
 
 const required = (v: string | undefined, name: string): string => {
@@ -76,7 +77,7 @@ export function assertServerEnv(): void {
     }
     throw new Error(
       `[env] Missing required environment variables: ${missing.join(", ")}. ` +
-        `Set these in your deployment platform (Cloudflare / Lovable dashboard) before launch.`,
+        `Set these in your Vercel project (Project Settings → Environment Variables) before launch.`,
     );
   }
 }

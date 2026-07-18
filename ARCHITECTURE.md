@@ -13,9 +13,8 @@ landing page** (`/`) that scrolls through sections: hero, program, workshops,
 roadmaps, trainer, testimonials, a consultation form, contact, and footer.
 
 Despite being a one-pager, it runs on a **full-stack SSR meta-framework**
-(TanStack Start). The framework is currently over-provisioned for the content,
-but it is in place to (a) satisfy the Lovable integration and (b) leave room
-to grow into multi-page routing, server functions, and data fetching.
+(TanStack Start). The framework leaves room to grow into multi-page routing,
+server functions, and data fetching.
 
 **Stack at a glance**
 
@@ -25,8 +24,8 @@ to grow into multi-page routing, server functions, and data fetching.
 | UI runtime  | React 19.2                                       |
 | Routing     | TanStack Router 1.170 (file-based)               |
 | Data        | TanStack Query 5.101 (initialized, not yet used) |
-| Server      | Nitro → Cloudflare (default target)              |
-| Build       | Vite 8 (via `@lovable.dev/vite-tanstack-config`) |
+| Server      | Nitro → Vercel (Build Output API)                |
+| Build       | Vite 8 (official TanStack Start + Nitro config)  |
 | Styling     | Tailwind CSS v4 (CSS-first config)               |
 | UI kit      | shadcn/ui (New York) on Radix UI primitives      |
 | Language    | TypeScript 5.8 (strict)                          |
@@ -38,13 +37,13 @@ to grow into multi-page routing, server functions, and data fetching.
 
 ```
 the-cloud-school-source/
-├── AGENTS.md                  # Lovable sync rules — READ BEFORE COMMITTING
+├── AGENTS.md                  # Vercel deploy notes — READ BEFORE DEPLOYING
 ├── bunfig.toml               # bun: 24h min package-age supply-chain guard
 ├── components.json            # shadcn/ui config (new-york, slate)
 ├── eslint.config.js           # flat ESLint + Prettier
 ├── package.json
 ├── tsconfig.json             # @/* path alias → src/*
-├── vite.config.ts            # wraps @lovable.dev/vite-tanstack-config
+├── vite.config.ts            # official TanStack Start + Nitro/vercel config
 ├── public/favicon.ico
 └── src/
     ├── components/ui/        # 47 shadcn primitives (Radix wrappers)
@@ -53,14 +52,13 @@ the-cloud-school-source/
     │   ├── utils.ts          # cn() class-merge helper
     │   ├── error-capture.ts  # out-of-band last-error capture (h3 quirk)
     │   ├── error-page.ts     # static 500 HTML string
-    │   └── lovable-error-reporting.ts  # forwards errors to Lovable editor
     ├── router.tsx            # createRouter() + QueryClient
     ├── routes/
     │   ├── __root.tsx        # app shell, <head> meta, 404 + error boundaries
     │   ├── index.tsx         # THE ENTIRE SITE (single page)
     │   └── README.md         # routing convention docs
     ├── routeTree.gen.ts      # GENERATED — do not edit by hand
-    ├── server.ts             # Nitro/Cloudflare entry (SSR error wrapper)
+    ├── server.ts             # Nitro/Vercel entry (SSR error wrapper)
     ├── start.ts              # createStart() + request middleware
     └── styles.css            # Tailwind v4 + design tokens + keyframes
 ```
@@ -76,7 +74,7 @@ Never hand-edit it.
 Browser request
       │
       ▼
-src/server.ts  (Nitro/Cloudflare entry)
+src/server.ts  (Nitro/Vercel entry)
       │  wraps @tanstack/react-start/server-entry
       │  normalizes "swallowed" h3 SSR 500s into a friendly error page
       ▼
@@ -104,8 +102,7 @@ touching any of them:
 3. `start.ts` — `errorMiddleware` re-throws HTTP-error responses untouched but
    wraps other server errors in the static error page.
 4. `__root.tsx` — React-level `errorComponent` / `notFoundComponent` for
-   client-side failures, forwarding to Lovable telemetry via
-   `reportLovableError`.
+   client-side failures, logging to the console.
 
 ---
 
@@ -237,13 +234,12 @@ Consider pruning any you do not intend to use.
 ## 11. Build, lint, deploy
 
 **Package manager: bun.** `bunfig.toml` enforces a 24-hour minimum package
-age for new dependencies (supply-chain guard); Lovable's own packages are
-exempted.
+age for new dependencies (supply-chain guard).
 
 | Script      | Command                         | Purpose                                                                             |
 | ----------- | ------------------------------- | ----------------------------------------------------------------------------------- |
-| `dev`       | `vite dev`                      | Dev server (Lovable wrapper injects devtools, Tailwind, tsconfig paths, Nitro, HMR) |
-| `build`     | `vite build`                    | Production build → `.output` (Nitro/Cloudflare)                                     |
+| `dev`       | `vite dev`                      | Dev server (Tailwind, tsconfig paths, Nitro, HMR)                                   |
+| `build`     | `vite build`                    | Production build → `.vercel/output` (Nitro/Vercel)                                  |
 | `build:dev` | `vite build --mode development` | Dev-mode build                                                                      |
 | `preview`   | `vite preview`                  | Preview the production build                                                        |
 | `lint`      | `eslint .`                      | Lint (strict, Prettier-integrated)                                                  |
@@ -253,14 +249,11 @@ exempted.
 package). Server-only code must use `*.server.ts` files or TanStack's
 `@tanstack/react-start/server-only` marker.
 
-**Deployment:** managed by **Lovable** and targets **Cloudflare** via Nitro.
-Pushing commits to the connected branch syncs to Lovable and deploys — there is
-no separate CI/CD config in this repo. There is **no** `wrangler.toml`,
-Dockerfile, or GitHub Actions file.
-
-> **`AGENTS.md` constraint:** do **not** rewrite already-pushed git history
-> (force-push, rebase/amend/squash) — it desyncs Lovable and the user loses
-> project history. Keep the branch in a working state.
+**Deployment:** builds to the **Vercel** Build Output API (`.vercel/output`)
+via Nitro's `vercel` preset. The serverless function's env vars are declared in
+`vite.config.ts` (`nitro.vercel.functions.env`) and must stay in sync with
+`src/lib/env.ts`. There is **no** `wrangler.toml`, Dockerfile, or GitHub Actions
+file — deploys run through the Vercel build.
 
 ---
 

@@ -59,5 +59,5 @@ Nice-to-have / polish: valuable but not blocking.
 ## Notes
 
 - Do not hand-edit `src/routeTree.gen.ts` (generated).
-- Follow `AGENTS.md`: do not rewrite pushed git history (breaks Lovable sync).
+- New patterns should follow ARCHITECTURE.md §12 ("How to add features").
 - New patterns should follow ARCHITECTURE.md §12 ("How to add features").

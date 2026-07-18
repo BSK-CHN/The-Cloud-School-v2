@@ -1,10 +1,10 @@
 // In-memory sliding-window rate limiter, keyed by client IP.
 //
-// NOTE: Cloudflare Workers may run multiple isolates, so this Map lives
-// per-isolate. It is defense-in-depth against burst abuse (email bombing,
-// DB pollution, cost inflation) for the public lead endpoints. For a hard
-// global limit, also configure a Cloudflare WAF rate-limiting rule
-// (see the launch summary's manual-config steps).
+// NOTE: on Vercel each serverless instance has its own memory, so this Map
+// lives per-instance. It is defense-in-depth against burst abuse (email
+// bombing, DB pollution, cost inflation) for the public lead endpoints. For a
+// hard global limit, add Vercel's platform rate limiting (WAF / Firewall) or a
+// shared store (e.g. Upstash Redis) in front of these endpoints.
 
 const WINDOW_MS = 60_000; // 1 minute
 const MAX_PER_WINDOW = 8; // per identifier, per window
