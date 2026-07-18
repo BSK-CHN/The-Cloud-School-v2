@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Replace https://thecloudschool.in with your production SITE_URL.
+  As new marketing routes are added (city/transition pages, /blog, /about),
+  append a <url> entry for each so search engines discover them.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://thecloudschool.in/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
