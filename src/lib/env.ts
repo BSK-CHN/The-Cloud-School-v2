@@ -55,6 +55,13 @@ export function assertServerEnv(): void {
     (name) => !process.env[name] || process.env[name]!.trim() === "",
   );
   if (missing.length > 0) {
+    // Diagnostic: log the env KEY NAMES (never values) Vercel actually
+    // delivered to the function, so a missing-var 500 is self-explanatory
+    // (e.g. empty list => vars not in this deployment's environment scope).
+    console.error(
+      `[env] process.env has ${Object.keys(process.env).length} keys: ` +
+        Object.keys(process.env).join(", "),
+    );
     throw new Error(
       `[env] Missing required environment variables: ${missing.join(", ")}. ` +
         `Set these in your deployment platform (Cloudflare / Lovable dashboard) before launch.`,
