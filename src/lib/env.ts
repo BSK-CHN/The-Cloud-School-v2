@@ -55,13 +55,25 @@ export function assertServerEnv(): void {
     (name) => !process.env[name] || process.env[name]!.trim() === "",
   );
   if (missing.length > 0) {
-    // Diagnostic: log the env KEY NAMES (never values) Vercel actually
-    // delivered to the function, so a missing-var 500 is self-explanatory
-    // (e.g. empty list => vars not in this deployment's environment scope).
-    console.error(
-      `[env] process.env has ${Object.keys(process.env).length} keys: ` +
-        Object.keys(process.env).join(", "),
-    );
+    // Diagnostic: this runs at ESM module-evaluation (cold-start INIT phase),
+    // where Nitro/unenv's buffered console can be discarded when the module
+    // load throws. Write synchronously to raw stderr (fd 2) so the line is
+    // guaranteed into the log pipe BEFORE the throw. Logs KEY NAMES only.
+    try {
+      const fs = require("node:fs");
+      fs.writeSync(
+        2,
+        `[env] process.env has ${Object.keys(process.env).length} keys: ` +
+          Object.keys(process.env).join(", ") +
+          "\n",
+      );
+    } catch {
+      // If require/fs is unavailable, fall back to console (best effort).
+      console.error(
+        `[env] process.env has ${Object.keys(process.env).length} keys: ` +
+          Object.keys(process.env).join(", "),
+      );
+    }
     throw new Error(
       `[env] Missing required environment variables: ${missing.join(", ")}. ` +
         `Set these in your deployment platform (Cloudflare / Lovable dashboard) before launch.`,
